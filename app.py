@@ -38,26 +38,26 @@ TIMEFRAMES = {
 }
 
 COIN_OPTIONS = [
-    {"id": "bitcoin", "label": "Bitcoin (BTC)"},
-    {"id": "ethereum", "label": "Ethereum (ETH)"},
-    {"id": "tether", "label": "Tether (USDT)"},
-    {"id": "ripple", "label": "XRP"},
-    {"id": "binancecoin", "label": "BNB"},
-    {"id": "solana", "label": "Solana (SOL)"},
-    {"id": "usd-coin", "label": "USD Coin (USDC)"},
-    {"id": "dogecoin", "label": "Dogecoin (DOGE)"},
-    {"id": "cardano", "label": "Cardano (ADA)"},
-    {"id": "tron", "label": "Tron (TRX)"},
-    {"id": "chainlink", "label": "Chainlink (LINK)"},
-    {"id": "avalanche-2", "label": "Avalanche (AVAX)"},
-    {"id": "toncoin", "label": "Toncoin (TON)"},
-    {"id": "stellar", "label": "Stellar (XLM)"},
-    {"id": "polkadot", "label": "Polkadot (DOT)"},
-    {"id": "sui", "label": "Sui (SUI)"},
-    {"id": "litecoin", "label": "Litecoin (LTC)"},
-    {"id": "bitcoin-cash", "label": "Bitcoin Cash (BCH)"},
-    {"id": "shiba-inu", "label": "Shiba Inu (SHIB)"},
-    {"id": "pepe", "label": "Pepe (PEPE)"},
+    {"id": "bitcoin", "label": "Bitcoin (BTC)", "tv_symbol": "BINANCE:BTCUSDT"},
+    {"id": "ethereum", "label": "Ethereum (ETH)", "tv_symbol": "BINANCE:ETHUSDT"},
+    {"id": "tether", "label": "Tether (USDT)", "tv_symbol": "BINANCE:USDCUSDT"},
+    {"id": "ripple", "label": "XRP", "tv_symbol": "BINANCE:XRPUSDT"},
+    {"id": "binancecoin", "label": "BNB", "tv_symbol": "BINANCE:BNBUSDT"},
+    {"id": "solana", "label": "Solana (SOL)", "tv_symbol": "BINANCE:SOLUSDT"},
+    {"id": "usd-coin", "label": "USD Coin (USDC)", "tv_symbol": "BINANCE:USDCUSDT"},
+    {"id": "dogecoin", "label": "Dogecoin (DOGE)", "tv_symbol": "BINANCE:DOGEUSDT"},
+    {"id": "cardano", "label": "Cardano (ADA)", "tv_symbol": "BINANCE:ADAUSDT"},
+    {"id": "tron", "label": "Tron (TRX)", "tv_symbol": "BINANCE:TRXUSDT"},
+    {"id": "chainlink", "label": "Chainlink (LINK)", "tv_symbol": "BINANCE:LINKUSDT"},
+    {"id": "avalanche-2", "label": "Avalanche (AVAX)", "tv_symbol": "BINANCE:AVAXUSDT"},
+    {"id": "toncoin", "label": "Toncoin (TON)", "tv_symbol": "BINANCE:TONUSDT"},
+    {"id": "stellar", "label": "Stellar (XLM)", "tv_symbol": "BINANCE:XLMUSDT"},
+    {"id": "polkadot", "label": "Polkadot (DOT)", "tv_symbol": "BINANCE:DOTUSDT"},
+    {"id": "sui", "label": "Sui (SUI)", "tv_symbol": "BINANCE:SUIUSDT"},
+    {"id": "litecoin", "label": "Litecoin (LTC)", "tv_symbol": "BINANCE:LTCUSDT"},
+    {"id": "bitcoin-cash", "label": "Bitcoin Cash (BCH)", "tv_symbol": "BINANCE:BCHUSDT"},
+    {"id": "shiba-inu", "label": "Shiba Inu (SHIB)", "tv_symbol": "BINANCE:SHIBUSDT"},
+    {"id": "pepe", "label": "Pepe (PEPE)", "tv_symbol": "BINANCE:PEPEUSDT"},
 ]
 
 state_lock = threading.Lock()
@@ -183,8 +183,8 @@ def _fetch_coin_data(coin: str, currency: str) -> dict:
     return parsed
 
 
-def _fetch_market_list(currency: str, limit: int) -> list[dict]:
-    cache_key = f"markets:{currency}:{limit}"
+def _fetch_market_list(currency: str, limit: int, page: int = 1) -> list[dict]:
+    cache_key = f"markets:{currency}:{limit}:{page}"
     fresh = _cache_get_fresh(cache_key, 120)
     if fresh is not None:
         return fresh
@@ -196,7 +196,7 @@ def _fetch_market_list(currency: str, limit: int) -> list[dict]:
                 "vs_currency": currency,
                 "order": "market_cap_desc",
                 "per_page": str(limit),
-                "page": "1",
+                "page": str(page),
                 "sparkline": "false",
                 "price_change_percentage": "24h",
             },
@@ -212,6 +212,39 @@ def _fetch_market_list(currency: str, limit: int) -> list[dict]:
     if parsed:
         _cache_set(cache_key, parsed)
     return parsed
+
+
+def _fetch_ranked_markets(currency: str, pages: int, per_page: int) -> list[dict]:
+    cache_key = f"markets_ranked:{currency}:{pages}:{per_page}"
+    fresh = _cache_get_fresh(cache_key, 180)
+    if fresh is not None:
+        return fresh
+
+    all_markets: list[dict] = []
+    for page in range(1, pages + 1):
+        page_data = _fetch_market_list(currency=currency, limit=per_page, page=page)
+        if not page_data:
+            break
+        all_markets.extend(page_data)
+        if len(page_data) < per_page:
+            break
+
+    dedup: dict[str, dict] = {}
+    for item in all_markets:
+        if not isinstance(item, dict):
+            continue
+        coin_id = str(item.get("id") or "").strip()
+        if not coin_id:
+            continue
+        if coin_id in dedup:
+            continue
+        dedup[coin_id] = item
+
+    ranked = list(dedup.values())
+    ranked.sort(key=lambda x: (x.get("market_cap_rank") if isinstance(x.get("market_cap_rank"), int) else 10**9))
+    if ranked:
+        _cache_set(cache_key, ranked)
+    return ranked
 
 
 def _fetch_coins_directory() -> list[dict]:
@@ -894,13 +927,15 @@ def api_markets():
     try:
         currency = _normalize_currency(request.args.get("currency"))
         limit = int(request.args.get("limit", "30"))
+        page = int(request.args.get("page", "1"))
     except ValueError:
         return jsonify({"error": "Invalid query params."}), 400
 
     limit = max(5, min(limit, 250))
+    page = max(1, page)
 
     try:
-        raw_markets = _fetch_market_list(currency=currency, limit=limit)
+        raw_markets = _fetch_market_list(currency=currency, limit=limit, page=page)
     except HTTPError as exc:
         if exc.code == 429:
             return jsonify({"error": "Market API rate limit hit. Thori dair baad retry karein."}), 429
@@ -921,6 +956,7 @@ def api_markets():
                 "name": item.get("name"),
                 "image": item.get("image"),
                 "current_price": item.get("current_price"),
+                "market_cap_rank": item.get("market_cap_rank"),
                 "market_cap": item.get("market_cap"),
                 "total_volume": item.get("total_volume"),
                 "price_change_percentage_24h": item.get("price_change_percentage_24h"),
@@ -930,6 +966,7 @@ def api_markets():
     return jsonify(
         {
             "currency": currency,
+            "page": page,
             "count": len(markets),
             "fetched_at": _now_iso(),
             "markets": markets,
@@ -955,6 +992,59 @@ def api_coins():
             "count": len(coins),
             "coins": coins,
             "fetched_at": _now_iso(),
+        }
+    )
+
+
+@app.route("/api/markets/ranked", methods=["GET"])
+def api_markets_ranked():
+    try:
+        currency = _normalize_currency(request.args.get("currency"))
+        pages = int(request.args.get("pages", "4"))
+        per_page = int(request.args.get("per_page", "250"))
+    except ValueError:
+        return jsonify({"error": "Invalid query params."}), 400
+
+    pages = max(1, min(pages, 8))
+    per_page = max(50, min(per_page, 250))
+
+    try:
+        raw_markets = _fetch_ranked_markets(currency=currency, pages=pages, per_page=per_page)
+    except HTTPError as exc:
+        if exc.code == 429:
+            return jsonify({"error": "Market API rate limit hit. Thori dair baad retry karein."}), 429
+        return jsonify({"error": "Market provider error", "details": f"HTTP {exc.code}"}), 502
+    except URLError:
+        return jsonify({"error": "Provider se connection nahi ho saka."}), 503
+    except json.JSONDecodeError:
+        return jsonify({"error": "Provider ne invalid response diya."}), 502
+
+    markets = []
+    for item in raw_markets:
+        if not isinstance(item, dict):
+            continue
+        markets.append(
+            {
+                "id": item.get("id"),
+                "symbol": item.get("symbol"),
+                "name": item.get("name"),
+                "image": item.get("image"),
+                "market_cap_rank": item.get("market_cap_rank"),
+                "current_price": item.get("current_price"),
+                "market_cap": item.get("market_cap"),
+                "total_volume": item.get("total_volume"),
+                "price_change_percentage_24h": item.get("price_change_percentage_24h"),
+            }
+        )
+
+    return jsonify(
+        {
+            "currency": currency,
+            "pages": pages,
+            "per_page": per_page,
+            "count": len(markets),
+            "fetched_at": _now_iso(),
+            "markets": markets,
         }
     )
 

@@ -85,20 +85,25 @@ function initHomePage() {
     let hasLoadedCoins = false;
     let visibleLimit = 600;
 
-    const renderRows = (markets) => {
+    const renderRows = (coins) => {
         tableBody.innerHTML = "";
-        markets.forEach((coin, idx) => {
+        coins.forEach((coin) => {
             const change = toSafeNumber(coin.price_change_percentage_24h);
             const rawPrice = coin.current_price;
             const rawVolume = coin.total_volume;
             const rawCap = coin.market_cap;
             const showChange = typeof coin.price_change_percentage_24h === "number";
+            const rank = Number.isFinite(Number(coin.market_cap_rank)) ? Number(coin.market_cap_rank) : "-";
+            const iconHtml = coin.image
+                ? `<img src="${coin.image}" alt="${coin.symbol || "coin"}">`
+                : `<span class="coin-fallback">${String((coin.symbol || coin.name || "?")[0] || "?").toUpperCase()}</span>`;
+
             const row = document.createElement("tr");
             row.innerHTML = `
-                <td>${idx + 1}</td>
+                <td>${rank}</td>
                 <td>
                     <div class="coin-cell">
-                        <img src="${coin.image || ""}" alt="${coin.symbol || "coin"}">
+                        ${iconHtml}
                         <div>
                             <strong>${coin.name || "-"}</strong><br>
                             <small>${(coin.symbol || "").toUpperCase()} ${coin.id ? `| ${coin.id}` : ""}</small>
@@ -133,11 +138,12 @@ function initHomePage() {
             });
         }
 
-        const limited = filteredCoins.slice(0, visibleLimit).map((coin) => {
+        const merged = filteredCoins.map((coin) => {
             const market = marketsMap.get(coin.id) || {};
             return {
                 ...coin,
                 image: market.image || "",
+                market_cap_rank: market.market_cap_rank,
                 current_price: market.current_price,
                 total_volume: market.total_volume,
                 market_cap: market.market_cap,
@@ -145,16 +151,25 @@ function initHomePage() {
             };
         });
 
+        merged.sort((a, b) => {
+            const rankA = Number.isFinite(Number(a.market_cap_rank)) ? Number(a.market_cap_rank) : Number.MAX_SAFE_INTEGER;
+            const rankB = Number.isFinite(Number(b.market_cap_rank)) ? Number(b.market_cap_rank) : Number.MAX_SAFE_INTEGER;
+            if (rankA !== rankB) return rankA - rankB;
+            return String(a.name || "").localeCompare(String(b.name || ""));
+        });
+
+        const limited = merged.slice(0, visibleLimit);
         renderRows(limited);
-        if (filteredCoins.length > visibleLimit) {
+
+        if (merged.length > visibleLimit) {
             loadMoreButton.style.display = "inline-block";
-            loadMoreButton.textContent = `Load More (${Math.min(600, filteredCoins.length - visibleLimit)} more)`;
+            loadMoreButton.textContent = `Load More (${Math.min(600, merged.length - visibleLimit)} more)`;
         } else {
             loadMoreButton.style.display = "none";
         }
 
         if (query) {
-            setMessage(statusText, `Results: ${filteredCoins.length} | Showing: ${limited.length}`);
+            setMessage(statusText, `Results: ${merged.length} | Showing: ${limited.length}`);
         } else {
             setMessage(statusText, `All coins loaded: ${allCoins.length} | Showing: ${limited.length}`);
         }
@@ -174,9 +189,9 @@ function initHomePage() {
     };
 
     const loadMarkets = async () => {
-        setMessage(statusText, "Market prices load ho rahi hain...");
+        setMessage(statusText, "Ranked market prices load ho rahi hain...");
         try {
-            const data = await requestJSON(`/api/markets?currency=${encodeURIComponent(currencySelect.value)}&limit=250`);
+            const data = await requestJSON(`/api/markets/ranked?currency=${encodeURIComponent(currencySelect.value)}&pages=4&per_page=250`);
             allMarkets = Array.isArray(data.markets) ? data.markets : [];
             if (!hasLoadedCoins) {
                 await loadCoins();
@@ -621,13 +636,31 @@ function initBotPage() {
 
 function initChartPage() {
     const coinSelect = document.getElementById("chart-coin");
-    const daysSelect = document.getElementById("chart-days");
+    const intervalSelect = document.getElementById("chart-interval");
     const refreshBtn = document.getElementById("chart-refresh");
     const statusEl = document.getElementById("chart-status");
+    const tvContainer = document.getElementById("tradingview-widget");
     const canvas = document.getElementById("candlestick-canvas");
 
-    if (!coinSelect || !daysSelect || !refreshBtn || !statusEl || !canvas) return;
+    if (!coinSelect || !intervalSelect || !refreshBtn || !statusEl || !tvContainer || !canvas) return;
     let latestCandles = [];
+
+    const intervalToDays = (interval) => {
+        const mapping = {
+            "1": "1",
+            "3": "1",
+            "5": "1",
+            "15": "1",
+            "30": "1",
+            "60": "7",
+            "120": "7",
+            "240": "30",
+            D: "90",
+            W: "90",
+            M: "90",
+        };
+        return mapping[interval] || "30";
+    };
 
     const drawCandles = (series) => {
         const ctx = canvas.getContext("2d");
@@ -716,17 +749,73 @@ function initChartPage() {
         }
     };
 
-    const loadChart = async () => {
+    const ensureTradingViewScript = () =>
+        new Promise((resolve, reject) => {
+            if (window.TradingView && window.TradingView.widget) {
+                resolve(true);
+                return;
+            }
+
+            const existing = document.querySelector("script[data-tv-script='1']");
+            if (existing) {
+                existing.addEventListener("load", () => resolve(true), { once: true });
+                existing.addEventListener("error", () => reject(new Error("TradingView script load fail.")), { once: true });
+                return;
+            }
+
+            const script = document.createElement("script");
+            script.src = "https://s3.tradingview.com/tv.js";
+            script.async = true;
+            script.dataset.tvScript = "1";
+            script.onload = () => resolve(true);
+            script.onerror = () => reject(new Error("TradingView script load fail."));
+            document.head.appendChild(script);
+        });
+
+    const createTradingViewWidget = async () => {
+        const selectedOption = coinSelect.options[coinSelect.selectedIndex];
+        const tvSymbol = selectedOption?.dataset?.tvSymbol || "BINANCE:BTCUSDT";
+        const interval = intervalSelect.value;
+
+        await ensureTradingViewScript();
+        if (!(window.TradingView && window.TradingView.widget)) {
+            throw new Error("TradingView widget available nahi.");
+        }
+
+        tvContainer.innerHTML = "";
+        tvContainer.style.display = "block";
+        canvas.style.display = "none";
+
+        new window.TradingView.widget({
+            symbol: tvSymbol,
+            interval,
+            timezone: "Etc/UTC",
+            theme: "light",
+            style: "1",
+            locale: "en",
+            hide_top_toolbar: false,
+            hide_side_toolbar: false,
+            allow_symbol_change: true,
+            enable_publishing: false,
+            autosize: true,
+            container_id: "tradingview-widget",
+        });
+    };
+
+    const loadFallbackChart = async () => {
         const coin = coinSelect.value;
-        const days = daysSelect.value;
-        setMessage(statusEl, "Candlestick chart load ho raha hai...");
+        const interval = intervalSelect.value;
+        const days = intervalToDays(interval);
+        setMessage(statusEl, "Fallback candlestick chart load ho raha hai...");
         try {
             const data = await requestJSON(
                 `/api/ohlc?coin=${encodeURIComponent(coin)}&currency=${defaultCurrency}&days=${encodeURIComponent(days)}`
             );
             latestCandles = Array.isArray(data.candles) ? data.candles : [];
+            tvContainer.style.display = "none";
+            canvas.style.display = "block";
             drawCandles(latestCandles);
-            setMessage(statusEl, `Chart updated: ${coin.toUpperCase()} (${days}D)`);
+            setMessage(statusEl, `Fallback chart updated: ${coin.toUpperCase()} (${interval})`);
         } catch (error) {
             setMessage(statusEl, error.message, true);
         }
@@ -734,9 +823,21 @@ function initChartPage() {
 
     window.addEventListener("resize", () => drawCandles(latestCandles));
 
+    const loadChart = async () => {
+        setMessage(statusEl, "TradingView chart load ho raha hai...");
+        try {
+            await createTradingViewWidget();
+            const coin = coinSelect.value;
+            const interval = intervalSelect.value;
+            setMessage(statusEl, `TradingView chart updated: ${coin.toUpperCase()} (${interval})`);
+        } catch (error) {
+            await loadFallbackChart();
+        }
+    };
+
     refreshBtn.addEventListener("click", loadChart);
     coinSelect.addEventListener("change", loadChart);
-    daysSelect.addEventListener("change", loadChart);
+    intervalSelect.addEventListener("change", loadChart);
 
     loadChart();
     setInterval(loadChart, 120000);

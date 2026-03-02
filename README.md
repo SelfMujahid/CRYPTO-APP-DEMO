@@ -13,6 +13,7 @@ APIs:
 - `/api/account`
 - `/api/market?coin=bitcoin&currency=usd`
 - `/api/markets?currency=usd&limit=250`
+- `/api/markets/ranked?currency=usd&pages=4&per_page=250`
 - `/api/coins` (all coins directory)
 - `/api/ohlc?coin=bitcoin&currency=usd&days=1`
 - `/api/trade/execute` (spot/futures demo)

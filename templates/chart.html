@@ -6,7 +6,7 @@
 {% block content %}
 <section class="hero-block">
     <h1>Candlestick Chart</h1>
-    <p>TradingView style candlestick chart with coin and timeframe controls.</p>
+    <p>TradingView style chart: full timeframe controls + indicators panel.</p>
 </section>
 
 <section class="panel-block">
@@ -15,24 +15,32 @@
             <label for="chart-coin">Crypto</label>
             <select id="chart-coin">
                 {% for coin in coin_options %}
-                <option value="{{ coin.id }}" {% if coin.id == default_coin %}selected{% endif %}>{{ coin.label }}</option>
+                <option value="{{ coin.id }}" data-tv-symbol="{{ coin.tv_symbol }}" {% if coin.id == default_coin %}selected{% endif %}>{{ coin.label }}</option>
                 {% endfor %}
             </select>
         </div>
         <div class="toolbar-group">
-            <label for="chart-days">Timeframe</label>
-            <select id="chart-days">
-                <option value="1">1D</option>
-                <option value="7">7D</option>
-                <option value="30">1M</option>
-                <option value="90">3M</option>
+            <label for="chart-interval">Timeframe</label>
+            <select id="chart-interval">
+                <option value="1">1m</option>
+                <option value="3">3m</option>
+                <option value="5">5m</option>
+                <option value="15">15m</option>
+                <option value="30">30m</option>
+                <option value="60">1h</option>
+                <option value="120">2h</option>
+                <option value="240">4h</option>
+                <option value="D" selected>1D</option>
+                <option value="W">1W</option>
+                <option value="M">1M</option>
             </select>
         </div>
-        <button id="chart-refresh" class="search-button">Load Chart</button>
+        <button id="chart-refresh" class="search-button">Apply</button>
     </div>
 
-    <p id="chart-status" class="status-text">Chart load ho raha hai...</p>
+    <p id="chart-status" class="status-text">Chart load ho raha hai... Indicators button top toolbar mein available hai.</p>
     <div id="candlestick-chart" class="chart-box">
+        <div id="tradingview-widget" class="tv-widget"></div>
         <canvas id="candlestick-canvas"></canvas>
     </div>
 </section>
