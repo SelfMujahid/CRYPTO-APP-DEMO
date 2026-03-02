@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC Real-Time Data - Welcome to Real-Time BTC Data</title>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <div class="top-left-logo">
+            <span class="fab fa-bitcoin logo-with-border" aria-hidden="true"></span>
+            <span>Self Mujahid</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#" aria-current="page">Home</a></li>
+                <li><a href="#dashboard">Real-Time BTC Data</a></li>
+                <li><a href="#dashboard">Chart</a></li>
+                <li><a href="#dashboard">Analyse</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main id="dashboard">
+        <section class="intro">
+            <div class="welcome-container">
+                <h1 class="btc-text">BTC Real-Time Data</h1>
+                <p class="welcome-text">
+                    Welcome to the real-time BTC data dashboard. Yahan aap latest market trend, price movement
+                    aur quick analysis dekh sakte hain.
+                </p>
+            </div>
+
+            <div class="image-container">
+                <img
+                    class="mujahid-image"
+                    src="https://www.dropbox.com/scl/fi/cuqcpx0j01krwytnnzymn/20240628_090111-removebg-preview.png?rlkey=pq4yr623hr742r81hit5ldj27&dl=1"
+                    alt="Mujahid Tasveer"
+                >
+            </div>
+
+            <form class="search-container" id="search-form">
+                <input id="coin-input" type="text" value="{{ default_coin }}" placeholder="Search coin id, e.g. bitcoin">
+                <button type="submit" class="search-button">Search</button>
+            </form>
+        </section>
+
+        <section class="visual-and-data">
+            <div class="cube-wrap" aria-hidden="true">
+                <div class="cube">
+                    <div class="face front"><i class="cube-logo fab fa-bitcoin"></i></div>
+                    <div class="face back"><i class="cube-logo fab fa-bitcoin"></i></div>
+                    <div class="face right"><i class="cube-logo fab fa-bitcoin"></i></div>
+                    <div class="face left"><i class="cube-logo fab fa-bitcoin"></i></div>
+                    <div class="face top"><i class="cube-logo fab fa-bitcoin"></i></div>
+                    <div class="face bottom"><i class="cube-logo fab fa-bitcoin"></i></div>
+                </div>
+            </div>
+
+            <div class="data-panel">
+                <p class="panel-label">Live Market Feed</p>
+                <h2 id="coin-title">bitcoin / usd</h2>
+                <p id="status-text" class="status-text">Loading latest data...</p>
+
+                <div class="stats-grid">
+                    <article class="stat-card">
+                        <h3>Current Price</h3>
+                        <p id="price-value">-</p>
+                    </article>
+                    <article class="stat-card">
+                        <h3>24h Change</h3>
+                        <p id="change-value">-</p>
+                    </article>
+                    <article class="stat-card">
+                        <h3>24h Volume</h3>
+                        <p id="volume-value">-</p>
+                    </article>
+                    <article class="stat-card">
+                        <h3>Market Cap</h3>
+                        <p id="cap-value">-</p>
+                    </article>
+                </div>
+
+                <p id="updated-text" class="updated-text"></p>
+            </div>
+        </section>
+    </main>
+
+    <footer id="about">
+        <div class="social-icons">
+            <a href="https://x.com/SelfMujahid?t=7F0NPcPgOu0Y44Mci4M_qA&s=09" class="x" target="_blank" rel="noreferrer"><i class="fab fa-x-twitter"></i></a>
+            <a href="https://youtube.com/@selfmujahid?si=4nbeFdlCDSwBvVIX" class="youtube" target="_blank" rel="noreferrer"><i class="fab fa-youtube"></i></a>
+            <a href="https://whatsapp.com/channel/0029Va9QorTBKfiAiPzPFi2o" class="whatsapp" target="_blank" rel="noreferrer"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://www.snapchat.com/add/selfmujahid?share_id=LpEs56l2VFo&locale=en-PK" class="snapchat" target="_blank" rel="noreferrer"><i class="fab fa-snapchat"></i></a>
+            <a href="https://www.threads.net/@selfmujahid" class="threads" target="_blank" rel="noreferrer"><i class="fab fa-threads"></i></a>
+            <a href="https://www.instagram.com/selfmujahid?igsh=MWhvM2JwMDl3aGk2aQ==" class="instagram" target="_blank" rel="noreferrer"><i class="fab fa-instagram"></i></a>
+            <a href="https://t.me/+MCgAcQ3MW_U5Yzg0" class="telegram" target="_blank" rel="noreferrer"><i class="fab fa-telegram"></i></a>
+        </div>
+    </footer>
+
+    <script>
+        window.APP_CONFIG = {
+            defaultCoin: "{{ default_coin }}",
+            defaultCurrency: "{{ default_currency }}"
+        };
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>
