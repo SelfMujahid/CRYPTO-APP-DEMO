@@ -29,6 +29,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: "8.7"
+          cache-disabled: true
 
       - name: Install Android SDK Components
         run: |
@@ -37,10 +38,17 @@ jobs:
       - name: Build Debug APK
         working-directory: android-webview-app
         run: |
-          gradle assembleDebug -PAPP_URL="${{ github.event.inputs.app_url }}"
+          gradle --no-daemon assembleDebug -PAPP_URL="${{ github.event.inputs.app_url }}"
+
+      - name: Verify APK Path
+        run: |
+          ls -lah android-webview-app/app/build/outputs/apk/debug || true
+          test -f android-webview-app/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: crypto-app-debug-apk
           path: android-webview-app/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
