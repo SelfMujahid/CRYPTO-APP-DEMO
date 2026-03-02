@@ -36,3 +36,15 @@ python app.py
 ```
 
 Open: `http://127.0.0.1:5000`
+
+## APK Build (Low-Spec Laptop Friendly)
+
+APK local Android Studio ke baghair bhi ban sakta hai via GitHub Actions.
+
+1. App ko pehle online host karo (Render/Railway/VPS), taake URL mile, e.g. `https://your-domain.com`
+2. GitHub repo me jao: `Actions` tab
+3. Workflow select karo: `Build Android APK`
+4. `Run workflow` press karo aur `app_url` me hosted URL do
+5. Build complete hone par artifact `crypto-app-debug-apk` download karo
+
+Android wrapper project path: `android-webview-app/`

@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+
+android-webview-app/.gradle/
+android-webview-app/**/build/
