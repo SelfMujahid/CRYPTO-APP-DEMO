@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CRYPTO-APP-DEMO{% endblock %}</title>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    {% block head_extra %}{% endblock %}
+</head>
+<body data-page="{% block page_id %}base{% endblock %}">
+    <header>
+        <div class="top-left-logo">
+            <span class="fab fa-bitcoin logo-with-border" aria-hidden="true"></span>
+            <span>Self Mujahid</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/" class="{% if page_name == 'home' %}active{% endif %}">Home</a></li>
+                <li><a href="/btc" class="{% if page_name == 'btc' %}active{% endif %}">Real-Time BTC Data</a></li>
+                <li><a href="/trading" class="{% if page_name == 'trading' %}active{% endif %}">Trading</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer id="about">
+        <div class="social-icons">
+            <a href="https://x.com/SelfMujahid?t=7F0NPcPgOu0Y44Mci4M_qA&s=09" class="x" target="_blank" rel="noreferrer"><i class="fab fa-x-twitter"></i></a>
+            <a href="https://youtube.com/@selfmujahid?si=4nbeFdlCDSwBvVIX" class="youtube" target="_blank" rel="noreferrer"><i class="fab fa-youtube"></i></a>
+            <a href="https://whatsapp.com/channel/0029Va9QorTBKfiAiPzPFi2o" class="whatsapp" target="_blank" rel="noreferrer"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://www.snapchat.com/add/selfmujahid?share_id=LpEs56l2VFo&locale=en-PK" class="snapchat" target="_blank" rel="noreferrer"><i class="fab fa-snapchat"></i></a>
+            <a href="https://www.threads.net/@selfmujahid" class="threads" target="_blank" rel="noreferrer"><i class="fab fa-threads"></i></a>
+            <a href="https://www.instagram.com/selfmujahid?igsh=MWhvM2JwMDl3aGk2aQ==" class="instagram" target="_blank" rel="noreferrer"><i class="fab fa-instagram"></i></a>
+            <a href="https://t.me/+MCgAcQ3MW_U5Yzg0" class="telegram" target="_blank" rel="noreferrer"><i class="fab fa-telegram"></i></a>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

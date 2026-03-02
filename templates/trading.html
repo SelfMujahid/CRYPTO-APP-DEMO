@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Trading - CRYPTO-APP-DEMO{% endblock %}
+{% block page_id %}trading{% endblock %}
+
+{% block content %}
+<section class="hero-block">
+    <h1>Trading Hub</h1>
+    <p>Demo amount ke saath spot, futures aur bot trading modules use karein.</p>
+</section>
+
+<section class="panel-block">
+    <div class="balance-card">
+        <p class="mini-label">Demo Amount</p>
+        <h2 id="demo-balance">$0.00</h2>
+        <p id="trading-status" class="status-text">Account load ho raha hai...</p>
+    </div>
+
+    <div class="trading-grid">
+        <a class="trading-link-card" href="/trading/spot">
+            <h3>Spot Trading</h3>
+            <p>Bitget style spot layout with instant demo orders.</p>
+        </a>
+        <a class="trading-link-card" href="/trading/futures">
+            <h3>Futures Trading</h3>
+            <p>Bitget inspired futures panel with leverage controls.</p>
+        </a>
+        <a class="trading-link-card" href="/trading/bot">
+            <h3>Bot Trading</h3>
+            <p>Indicator based bot, TP/SL percent controls, start/stop flow.</p>
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.APP_CONFIG = {
+        page: "trading-home"
+    };
+</script>
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
+{% endblock %}

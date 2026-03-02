@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Bot Trading - CRYPTO-APP-DEMO{% endblock %}
+{% block page_id %}bot{% endblock %}
+
+{% block content %}
+<section class="hero-block">
+    <h1>Bot Trading</h1>
+    <p>Crypto, timeframe, leverage, amount, indicator, TP/SL set karo aur bot ko start/stop se control karo.</p>
+</section>
+
+<section class="bot-layout">
+    <article class="panel-block">
+        <h2>Bot Settings</h2>
+        <form id="bot-form" class="form-grid">
+            <label for="bot-coin">Crypto</label>
+            <input id="bot-coin" value="{{ default_coin }}" required>
+
+            <label for="bot-timeframe">Time Frame</label>
+            <select id="bot-timeframe">
+                <option value="1m">1m</option>
+                <option value="5m" selected>5m</option>
+                <option value="15m">15m</option>
+                <option value="1h">1h</option>
+                <option value="4h">4h</option>
+            </select>
+
+            <label for="bot-leverage">Leverage</label>
+            <input id="bot-leverage" type="number" min="1" max="20" step="1" value="5" required>
+
+            <label for="bot-amount">Amount (USD)</label>
+            <input id="bot-amount" type="number" min="1" step="0.01" value="100" required>
+
+            <label for="bot-indicator">Indicator</label>
+            <select id="bot-indicator">
+                <option value="sma">SMA</option>
+                <option value="ema">EMA</option>
+                <option value="rsi">RSI</option>
+                <option value="macd">MACD</option>
+            </select>
+
+            <label for="bot-tp">Take Profit (%)</label>
+            <input id="bot-tp" type="number" min="0.1" step="0.1" value="2.0" required>
+
+            <label for="bot-sl">Stop Loss (%)</label>
+            <input id="bot-sl" type="number" min="0.1" step="0.1" value="1.0" required>
+
+            <div class="button-row">
+                <button type="submit" class="search-button">Start Bot</button>
+                <button id="stop-bot-btn" type="button" class="danger-btn">Stop Bot</button>
+            </div>
+        </form>
+        <p id="bot-action-status" class="status-text"></p>
+    </article>
+
+    <article class="panel-block">
+        <h2>Bot Status</h2>
+        <div class="stats-grid">
+            <article class="stat-card">
+                <h3>Running</h3>
+                <p id="bot-running">No</p>
+            </article>
+            <article class="stat-card">
+                <h3>Demo Balance</h3>
+                <p id="bot-balance">-</p>
+            </article>
+            <article class="stat-card">
+                <h3>Last Signal</h3>
+                <p id="bot-signal">-</p>
+            </article>
+            <article class="stat-card">
+                <h3>Last Price</h3>
+                <p id="bot-price">-</p>
+            </article>
+        </div>
+
+        <p id="bot-open-position" class="updated-text"></p>
+        <p id="bot-last-error" class="status-text error"></p>
+
+        <div class="table-shell">
+            <table class="market-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th>Coin</th>
+                        <th>Side</th>
+                        <th>Entry</th>
+                        <th>Exit</th>
+                        <th>PNL %</th>
+                    </tr>
+                </thead>
+                <tbody id="bot-trades-body"></tbody>
+            </table>
+        </div>
+    </article>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.APP_CONFIG = {
+        page: "bot",
+        defaultCoin: "{{ default_coin }}",
+        defaultCurrency: "{{ default_currency }}"
+    };
+</script>
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
+{% endblock %}

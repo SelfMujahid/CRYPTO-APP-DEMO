@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Home - CRYPTO-APP-DEMO{% endblock %}
+{% block page_id %}home{% endblock %}
+
+{% block content %}
+<section class="hero-block">
+    <h1>All Crypto Market Dashboard</h1>
+    <p>Home page par top cryptocurrencies ka live market snapshot dekhain.</p>
+</section>
+
+<section class="panel-block">
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <label for="currency-select">Currency</label>
+            <select id="currency-select">
+                <option value="usd" {% if default_currency == "usd" %}selected{% endif %}>USD</option>
+                <option value="eur">EUR</option>
+                <option value="pkr">PKR</option>
+            </select>
+        </div>
+        <div class="toolbar-group grow">
+            <label for="market-search">Search</label>
+            <input id="market-search" type="text" placeholder="coin name ya symbol search karein">
+        </div>
+        <button id="refresh-markets" class="search-button">Refresh</button>
+    </div>
+
+    <p id="home-status" class="status-text">Market data load ho rahi hai...</p>
+
+    <div class="table-shell">
+        <table class="market-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Coin</th>
+                    <th>Price</th>
+                    <th>24h %</th>
+                    <th>Volume</th>
+                    <th>Market Cap</th>
+                </tr>
+            </thead>
+            <tbody id="market-table-body"></tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.APP_CONFIG = {
+        page: "home",
+        defaultCurrency: "{{ default_currency }}"
+    };
+</script>
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
+{% endblock %}

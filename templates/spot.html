@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Spot Trading - CRYPTO-APP-DEMO{% endblock %}
+{% block page_id %}spot{% endblock %}
+
+{% block content %}
+<section class="hero-block">
+    <h1>Spot Trading</h1>
+    <p>Bitget-style spot panel with market preview and instant demo order execution.</p>
+</section>
+
+<section class="trade-layout">
+    <article class="panel-block">
+        <div class="market-head">
+            <h2 id="spot-symbol">{{ default_coin|upper }}/{{ default_currency|upper }}</h2>
+            <p id="spot-price">Price: -</p>
+        </div>
+        <p id="spot-change" class="status-text">24h change: -</p>
+        <div id="spot-book" class="book-grid"></div>
+    </article>
+
+    <article class="panel-block">
+        <h2>Place Spot Order</h2>
+        <form id="spot-form" class="form-grid">
+            <label for="spot-coin">Crypto</label>
+            <input id="spot-coin" value="{{ default_coin }}" required>
+
+            <label for="spot-side">Side</label>
+            <select id="spot-side">
+                <option value="buy">Buy</option>
+                <option value="sell">Sell</option>
+            </select>
+
+            <label for="spot-amount">Amount (USD)</label>
+            <input id="spot-amount" type="number" min="1" step="0.01" value="100" required>
+
+            <button type="submit" class="search-button">Execute Spot Trade</button>
+        </form>
+        <p id="spot-status" class="status-text"></p>
+        <p id="spot-balance" class="updated-text"></p>
+    </article>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.APP_CONFIG = {
+        page: "spot",
+        defaultCoin: "{{ default_coin }}",
+        defaultCurrency: "{{ default_currency }}"
+    };
+</script>
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
+{% endblock %}

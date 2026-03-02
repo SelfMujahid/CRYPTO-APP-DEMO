@@ -1,9 +1,19 @@
 # CRYPTO-APP-DEMO
 
-Flask based crypto dashboard with:
-- classic trading API routes: `/balance`, `/trade`
-- real-time market API route: `/api/market?coin=bitcoin&currency=usd`
-- styled dashboard UI on `/` (BTC neon theme + rotating cube + live stats)
+Flask based crypto dashboard with multi-page flow:
+- `Home (/)` => all crypto market list
+- `Real-Time BTC (/btc)` => intentionally blank page
+- `Trading (/trading)` => demo amount + Spot/Futures/Bot modules
+- Spot page => `/trading/spot`
+- Futures page => `/trading/futures`
+- Bot page => `/trading/bot`
+
+APIs:
+- `/api/account`
+- `/api/market?coin=bitcoin&currency=usd`
+- `/api/markets?currency=usd&limit=50`
+- `/api/trade/execute` (spot/futures demo)
+- `/api/bot/start`, `/api/bot/stop`, `/api/bot/status`
 
 ## Run
 
