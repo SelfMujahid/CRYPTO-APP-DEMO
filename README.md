@@ -45,6 +45,7 @@ APK local Android Studio ke baghair bhi ban sakta hai via GitHub Actions.
 2. GitHub repo me jao: `Actions` tab
 3. Workflow select karo: `Build Android APK`
 4. `Run workflow` press karo aur `app_url` me hosted URL do
-5. Build complete hone par artifact `crypto-app-debug-apk` download karo
+5. `app_url` me `https://github.com/...` repo link na do, warna APK repo page hi open karega
+6. Build complete hone par artifact `crypto-app-debug-apk` download karo
 
 Android wrapper project path: `android-webview-app/`

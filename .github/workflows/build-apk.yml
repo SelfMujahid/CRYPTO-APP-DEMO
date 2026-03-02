@@ -4,9 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       app_url:
-        description: "Hosted URL that should open inside APK (e.g. https://your-domain.com)"
+        description: "Hosted app URL (NOT GitHub repo URL). Example: https://your-app.onrender.com"
         required: true
-        default: "https://example.com"
 
 jobs:
   build:
@@ -30,6 +29,18 @@ jobs:
         with:
           gradle-version: "8.7"
           cache-disabled: true
+
+      - name: Validate URL Input
+        run: |
+          APP_URL="${{ github.event.inputs.app_url }}"
+          if [[ ! "$APP_URL" =~ ^https?:// ]]; then
+            echo "::error::app_url must start with http:// or https://"
+            exit 1
+          fi
+          if [[ "$APP_URL" == *"github.com/"* ]] || [[ "$APP_URL" == *"githubusercontent.com/"* ]]; then
+            echo "::error::GitHub repo URL mat do. Deployed app URL do (e.g. Render/Railway/VPS)."
+            exit 1
+          fi
 
       - name: Install Android SDK Components
         run: |
